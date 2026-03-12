@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4.6",
+        model: "claude-haiku-20240307",
         messages: [
           {
             role: "user",
