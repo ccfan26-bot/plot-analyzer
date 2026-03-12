@@ -64,7 +64,6 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error);
       setAnalysis(data);
     } catch (e: unknown) {
-      // ← unknown
       const msg = e instanceof Error ? e.message : "分析失败，请重试";
       setError(msg);
     } finally {
@@ -72,10 +71,13 @@ export default function Home() {
     }
   };
 
+  // ✅ 流式版本
   const handleGenerate = async () => {
     if (!analysis) return;
     setManuscriptLoading(true);
     setError("");
+    setManuscript(null);
+    setActiveTab("manuscript");
 
     try {
       const res = await fetch("/api/manuscript", {
@@ -88,12 +90,31 @@ export default function Home() {
           extraRequirements,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setManuscript(data);
-      setActiveTab("manuscript");
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      setManuscriptLoading(false); // 开始收到内容，关闭 loading 转为实时显示
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullText += decoder.decode(value, { stream: true });
+          setManuscript({
+            content: fullText,
+            wordCount: fullText.replace(/\s/g, "").length,
+            style,
+          });
+        }
+      }
     } catch (e: unknown) {
-      // ← unknown
       const msg = e instanceof Error ? e.message : "生成失败，请重试";
       setError(msg);
     } finally {
@@ -101,6 +122,7 @@ export default function Home() {
     }
   };
 
+  // ✅ 流式版本
   const handleRestyle = async () => {
     if (!manuscript) return;
     setManuscriptLoading(true);
@@ -117,11 +139,31 @@ export default function Home() {
           extraRequirements,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setManuscript(data);
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      setManuscriptLoading(false);
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullText += decoder.decode(value, { stream: true });
+          setManuscript({
+            content: fullText,
+            wordCount: fullText.replace(/\s/g, "").length,
+            style,
+          });
+        }
+      }
     } catch (e: unknown) {
-      // ← unknown
       const msg = e instanceof Error ? e.message : "改写失败，请重试";
       setError(msg);
     } finally {
@@ -201,7 +243,6 @@ export default function Home() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`shrink-0 px-4 py-3 text-sm font-medium transition-colors ${
-                        // ← shrink-0
                         activeTab === tab.id
                           ? "border-b-2 border-blue-500 text-blue-600"
                           : "text-gray-500 hover:text-gray-700"
