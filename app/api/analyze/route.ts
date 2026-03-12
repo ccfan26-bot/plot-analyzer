@@ -3,6 +3,8 @@ import { callPoeAPI } from "@/lib/poe-client";
 import { ANALYZE_PROMPT } from "@/lib/prompts";
 import type { Medium } from "@/lib/types";
 
+export const runtime = "edge";
+
 export async function POST(req: NextRequest) {
   const { input, medium } = await req.json();
 
