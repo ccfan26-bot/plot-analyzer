@@ -2,10 +2,12 @@ import { NextRequest } from "next/server";
 import { MANUSCRIPT_PROMPT, RESTYLE_PROMPT } from "@/lib/prompts";
 import type { AnalysisResult, ManuscriptStyle } from "@/lib/types";
 
-export const maxDuration = 60;
+export const runtime = "edge"; // ✅ 新增这一行，解决 60s 超时
+export const maxDuration = 300; // ✅ 改为 300（Edge Runtime 支持更长）
 
 const POE_API_KEY = process.env.POE_API_KEY;
 
+// 以下全部不变 ↓
 export async function POST(req: NextRequest) {
   const { action, analysis, style, originalManuscript, extraRequirements } =
     await req.json();
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: "claude-sonnet-4.6",
         messages: [{ role: "user", content: prompt }],
-        stream: true, // ✅ 开启流式
+        stream: true,
       }),
     });
 
@@ -53,7 +55,6 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    // ✅ 解析 Poe SSE 流，提取 delta.content，转为纯文字流输出给前端
     const stream = new ReadableStream({
       async start(controller) {
         const reader = poeResponse.body!.getReader();
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split("\n");
-            buffer = lines.pop() || ""; // 保留可能不完整的最后一行
+            buffer = lines.pop() || "";
 
             for (const line of lines) {
               const trimmed = line.trim();
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
                     controller.enqueue(encoder.encode(content));
                   }
                 } catch {
-                  // 忽略非 JSON 行（如心跳、注释等）
+                  // 忽略非 JSON 行
                 }
               }
             }
