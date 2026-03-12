@@ -60,9 +60,29 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input, medium }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setAnalysis(data);
+
+      // ✅ 错误时返回的是 JSON
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+
+      // ✅ 成功时累积流式文本，完成后再 JSON.parse
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          fullText += decoder.decode(value, { stream: true });
+        }
+      }
+
+      const cleaned = fullText.replace(/```json\n?|\n?```/g, "").trim();
+      const result = JSON.parse(cleaned);
+      setAnalysis(result);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "分析失败，请重试";
       setError(msg);
