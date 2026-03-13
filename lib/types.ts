@@ -1,4 +1,4 @@
-export type Medium = "book" | "movie" | "play";
+export type Medium = "book" | "movie" | "play" | "game";
 export type ManuscriptStyle =
   | "storytelling"
   | "academic"

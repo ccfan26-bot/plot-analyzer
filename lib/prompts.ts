@@ -1,7 +1,12 @@
 import type { AnalysisResult, Medium, ManuscriptStyle } from "./types";
 
 function getMediumLabel(medium: Medium): string {
-  const labels = { book: "书籍/小说", movie: "电影/剧集", play: "舞台剧/话剧" };
+  const labels = {
+    book: "书籍/小说",
+    movie: "电影/剧集",
+    play: "舞台剧/话剧",
+    game: "游戏/视觉小说",
+  };
   return labels[medium];
 }
 

@@ -1,21 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAppStore } from '@/lib/store';
-import type { Medium } from '@/lib/types';
+import { useState } from "react";
+import { useAppStore } from "@/lib/store";
+import type { Medium } from "@/lib/types";
 
 interface PlotInputProps {
   onAnalyze: (input: string) => void;
 }
 
 const mediums: { value: Medium; label: string; icon: string }[] = [
-  { value: 'book',  label: '书籍/小说', icon: '📚' },
-  { value: 'movie', label: '电影/剧集', icon: '🎬' },
-  { value: 'play',  label: '舞台剧',    icon: '🎭' },
+  { value: "book", label: "书籍/小说", icon: "📚" },
+  { value: "movie", label: "电影/剧集", icon: "🎬" },
+  { value: "play", label: "舞台剧", icon: "🎭" },
+  { value: "game", label: "游戏", icon: "🎮" },
 ];
 
 export default function PlotInput({ onAnalyze }: PlotInputProps) {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const { medium, setMedium, analysisLoading } = useAppStore();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,7 +28,9 @@ export default function PlotInput({ onAnalyze }: PlotInputProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* 作品类型选择 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">作品类型</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          作品类型
+        </label>
         <div className="flex gap-2">
           {mediums.map((m) => (
             <button
@@ -36,8 +39,8 @@ export default function PlotInput({ onAnalyze }: PlotInputProps) {
               onClick={() => setMedium(m.value)}
               className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-colors ${
                 medium === m.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  : "border-gray-200 text-gray-600 hover:border-gray-300"
               }`}
             >
               {m.icon} {m.label}
@@ -65,7 +68,7 @@ export default function PlotInput({ onAnalyze }: PlotInputProps) {
         disabled={analysisLoading || !input.trim()}
         className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {analysisLoading ? '分析中...' : '🔍 开始分析'}
+        {analysisLoading ? "分析中..." : "🔍 开始分析"}
       </button>
     </form>
   );
