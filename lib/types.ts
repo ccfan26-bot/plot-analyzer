@@ -7,6 +7,16 @@ export type ManuscriptStyle =
   | "teaching";
 export type Stage = "opening" | "development" | "climax" | "ending";
 
+export interface WorkInfo {
+  title: string;
+  author?: string; // book
+  publishYear?: string; // book
+  director?: string; // movie / play
+  releaseDate?: string; // movie / game
+  mainActors?: string[]; // movie（两位主演）
+  publisher?: string; // game
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -39,6 +49,7 @@ export interface AnalysisResult {
   title: string;
   medium: Medium;
   genre: string;
+  workInfo?: WorkInfo;
   characters: Character[];
   relationships: Relationship[];
   plotPoints: PlotPoint[];

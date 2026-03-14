@@ -10,11 +10,21 @@ function getMediumLabel(medium: Medium): string {
   return labels[medium];
 }
 
+function getWorkInfoSchema(medium: Medium): string {
+  const schemas = {
+    book: `{"title":"确认书名","author":"作者全名","publishYear":"出版年份如2019"}`,
+    movie: `{"title":"确认片名","director":"导演姓名","releaseDate":"上映日期如2019-03","mainActors":["主演1姓名","主演2姓名"]}`,
+    game: `{"title":"确认游戏名","publisher":"开发/发行商名称","releaseDate":"发行日期如2023-06"}`,
+    play: `{"title":"确认剧名","director":"导演姓名"}`,
+  };
+  return schemas[medium];
+}
+
 function getStyleDescription(style: string): string {
   const descriptions: Record<string, string> = {
     storytelling: "故事体，情节生动，适合传播和阅读，注重代入感",
     academic: "学术分析体，客观严谨，有论点论据，适合研究报告",
-    casual: "随笔风格，轻松自然，带有个人情感和口语化表达",
+    casual: "随笔风格，读来自然，富有个人情感和口语化表达",
     critical: "评论体（影评/书评），有观点有深度，兼顾分析与评价",
     teaching: "教学解析体，层次清晰，适合课堂讲解或科普读物",
   };
@@ -27,9 +37,9 @@ export const ANALYZE_PROMPT = (input: string, medium: Medium) =>
 
 ${input}
 
-{"title":"标题","medium":"${medium}","genre":"类型","characters":[{"id":"c1","name":"姓名","role":"主角/配角/反派/其他","description":"简介50字内"}],"relationships":[{"source":"c1","target":"c2","type":"朋友/敌人/恋人/亲人/师徒/同事","description":"说明"}],"plotPoints":[{"stage":"opening","title":"开端","events":["事件"]},{"stage":"development","title":"发展","events":["事件"]},{"stage":"climax","title":"高潮","events":["事件"]},{"stage":"ending","title":"结局","events":["事件"]}],"timeline":[{"id":"e1","stage":"opening","title":"标题","description":"详情","order":1}],"themes":["主题"],"setting":"背景","tone":"基调"}
+{"title":"标题","medium":"${medium}","genre":"类型","workInfo":${getWorkInfoSchema(medium)},"characters":[{"id":"c1","name":"姓名","role":"主角/配角/反派/其他","description":"简介50字内"}],"relationships":[{"source":"c1","target":"c2","type":"朋友/敌人/恋人/亲人/师徒/同事","description":"说明"}],"plotPoints":[{"stage":"opening","title":"开端","events":["事件"]},{"stage":"development","title":"发展","events":["事件"]},{"stage":"climax","title":"高潮","events":["事件"]},{"stage":"ending","title":"结局","events":["事件"]}],"timeline":[{"id":"e1","stage":"opening","title":"标题","description":"详情","order":1}],"themes":["主题"],"setting":"背景","tone":"基调"}
 
-规则：relationships的source/target用characters的id；timeline按时间顺序8-12个事件覆盖4阶段。
+规则：relationships的source/target用characters的id；timeline按时间顺序8-12个事件覆盖4阶段；workInfo必须填写真实准确的作品元数据。
 `.trim();
 
 export const MANUSCRIPT_PROMPT = (
@@ -37,12 +47,12 @@ export const MANUSCRIPT_PROMPT = (
   style: string,
   extraRequirements?: string,
 ) => `
-你是一位专业的文学创作者。请根据以下分析结果，以「${getStyleDescription(style)}」风格创作一篇稿件。
+你是一位专业的文字创作者。请根据以下分析结果，以「${getStyleDescription(style)}」风格创作一篇稿件。
 
 作品信息：
 - 标题：${analysis.title}
 - 类型：${analysis.genre}（${getMediumLabel(analysis.medium)}）
-- 背景：${analysis.setting}
+- 场景：${analysis.setting}
 - 基调：${analysis.tone}
 - 核心主题：${analysis.themes.join("、")}
 - 主要人物：${analysis.characters.map((c) => `${c.name}（${c.role}）：${c.description}`).join("；")}
@@ -60,7 +70,7 @@ export const RESTYLE_PROMPT = (
   style: ManuscriptStyle,
   extraRequirements?: string,
 ) => `
-你是一位专业的文学改编者。请将以下稿件改写为「${getStyleDescription(style)}」风格。
+你是一位专业的文字改编者。请将以下稿件改写为「${getStyleDescription(style)}」风格。
 
 原稿：
 ${originalManuscript}
