@@ -12,10 +12,10 @@ function getMediumLabel(medium: Medium): string {
 
 function getWorkInfoSchema(medium: Medium): string {
   const schemas = {
-    book: `{"title":"该书的原文标题（如英文原著填英文名）","author":"作者全名","publishYear":"出版年份如1971"}`,
-    movie: `{"title":"该片原文标题","director":"导演姓名","releaseDate":"上映日期如2019-03","mainActors":["主演1","主演2"]}`,
-    game: `{"title":"该游戏原文标题","publisher":"开发/发行商名称","releaseDate":"发行日期如2023-06"}`,
-    play: `{"title":"该剧原文标题","director":"导演姓名"}`,
+    book: `{"title":"该书的原文标题（如英文原著填英文名）","author":"作者全名","publishYear":"出版年份如1971","titleConfirmed":true}`,
+    movie: `{"title":"该片原文标题","director":"导演姓名","releaseDate":"上映日期如2019-03","mainActors":["主演1","主演2"],"titleConfirmed":true}`,
+    game: `{"title":"该游戏原文标题","publisher":"开发/发行商名称","releaseDate":"发行日期如2023-06","titleConfirmed":true}`,
+    play: `{"title":"该剧原文标题","director":"导演姓名","titleConfirmed":true}`,
   };
   return schemas[medium];
 }
@@ -25,7 +25,7 @@ function getStyleDescription(style: string): string {
     storytelling: "故事体，情节生动，适合传播和阅读，注重代入感",
     academic: "学术分析体，客观严谨，有论点论据，适合研究报告",
     casual: "随笔风格，读来自然，富有个人情感和口语化表达",
-    critical: "评论体（影评/书评），有观点有深度，兼顾分析与评价",
+    critical: "评论体（差评/好评），有观点有深度，兼顾分析与评价",
     teaching: "教学解析体，层次清晰，适合课堂讲解或科普读物",
   };
   return descriptions[style] || style;
@@ -37,14 +37,18 @@ export const ANALYZE_PROMPT = (input: string, medium: Medium) =>
 
 ${input}
 
-{"title":"用户输入的中文/原文标题原样保留","medium":"${medium}","genre":"类型","workInfo":${getWorkInfoSchema(medium)},"characters":[{"id":"c1","name":"姓名","role":"主角/配角/反派/其他","description":"简介50字内"}],"relationships":[{"source":"c1","target":"c2","type":"朋友/敌人/恋人/亲人/师徒/同事","description":"说明"}],"plotPoints":[{"stage":"opening","title":"开端","events":["事件"]},{"stage":"development","title":"发展","events":["事件"]},{"stage":"climax","title":"高潮","events":["事件"]},{"stage":"ending","title":"结局","events":["事件"]}],"timeline":[{"id":"e1","stage":"opening","title":"标题","description":"详情","order":1}],"themes":["主题"],"setting":"背景","tone":"基调"}
+{"title":"用户输入的中文/原文标题原样保留","medium":"${medium}","genre":"类型","workInfo":${getWorkInfoSchema(medium)},"characters":[{"id":"c1","name":"姓名","role":"主角/配角/反派/其他","description":"简介50字内"}],"relationships":[{"source":"c1","target":"c2","type":"朋友/敌人/情人/亲人/师徒/同僚","description":"说明"}],"plotPoints":[{"stage":"opening","title":"开篇","events":["事件"]},{"stage":"development","title":"发展","events":["事件"]},{"stage":"climax","title":"高潮","events":["事件"]},{"stage":"ending","title":"结局","events":["事件"]}],"timeline":[{"id":"e1","stage":"opening","title":"标题","description":"详情","order":1}],"themes":["主题"],"setting":"背景","tone":"基调"}
 
 严格规则：
 1. relationships的source/target必须使用characters中的id字段值
-2. timeline按时间顺序输出8-12个事件，覆盖全部4个阶段
+2. timeline按时间顺序输出8-12个事件，须覆盖全部4个阶段
 3. workInfo必须对应用户指定的这部作品本身，禁止替换为同作者/同系列的其他任何作品
 4. workInfo.title填写用户所指作品的原文名称（非用户输入的译名），publishYear/releaseDate必须与该作品一致
 5. title字段保留用户输入的原始标题不做改动
+6. titleConfirmed判断规则（重要）：
+   - 用户用任意语言输入（中文/英文/日文等），AI返回原文标题，属于正常翻译，填 true
+   - 只有在真正找错作品、找不到该作品、或存在严重歧义无法确定时，才填 false
+   - 前端不做任何跨语言字符串比较，一切不确定性由此字段标注
 `.trim();
 
 export const MANUSCRIPT_PROMPT = (
@@ -57,7 +61,7 @@ export const MANUSCRIPT_PROMPT = (
 作品信息：
 - 标题：${analysis.title}
 - 类型：${analysis.genre}（${getMediumLabel(analysis.medium)}）
-- 场景：${analysis.setting}
+- 背景：${analysis.setting}
 - 基调：${analysis.tone}
 - 核心主题：${analysis.themes.join("、")}
 - 主要人物：${analysis.characters.map((c) => `${c.name}（${c.role}）：${c.description}`).join("；")}

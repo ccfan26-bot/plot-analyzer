@@ -22,8 +22,8 @@ const CharacterGraph = dynamic(() => import("@/components/CharacterGraph"), {
 type TabId = "analysis" | "timeline" | "characters" | "manuscript";
 
 const tabs: { id: TabId; label: string }[] = [
-  { id: "analysis", label: "📋 分析概览" },
-  { id: "timeline", label: "📅 时间线" },
+  { id: "analysis", label: "🔍 分析概览" },
+  { id: "timeline", label: "🕐 时间线" },
   { id: "characters", label: "🕸️ 人物关系" },
   { id: "manuscript", label: "✍️ 生成稿件" },
 ];
@@ -56,7 +56,6 @@ export default function Home() {
     setActiveTab,
   } = useAppStore();
 
-  // 补充信息相关状态
   const [lastInput, setLastInput] = useState("");
   const [showCorrection, setShowCorrection] = useState(false);
   const [correction, setCorrection] = useState("");
@@ -105,7 +104,6 @@ export default function Home() {
     }
   };
 
-  // 用户补充信息后重新分析
   const handleCorrect = () => {
     if (!correction.trim()) return;
     const combined = `${lastInput}\n\n[用户补充信息]: ${correction}`;
@@ -211,15 +209,15 @@ export default function Home() {
     }
   };
 
-  // 渲染作品基本信息行
   const renderWorkInfoLine = () => {
     if (!analysis?.workInfo) return null;
     const w = analysis.workInfo;
     const icon = mediumIcons[analysis.medium] || "📖";
 
-    // 用户输入的标题 vs AI 识别的原文名，不同时并排显示方便核对
-    const titleMismatch =
-      w.title && w.title.toLowerCase() !== analysis.title.toLowerCase();
+    // ✅ 只读 AI 自己标注的置信字段，不做任何字符串比较
+    // 用户输中文、AI 返回英文原名 → 属正常翻译，AI 会填 true
+    // 只有 AI 真正不确定/找错时才填 false
+    const titleUncertain = w.titleConfirmed === false;
 
     const parts: string[] = [];
     if (w.author) parts.push(`作者：${w.author}`);
@@ -237,8 +235,8 @@ export default function Home() {
               <span>{icon}</span>
               {/* 用户输入的标题 */}
               <span className="font-semibold">{analysis.title}</span>
-              {/* AI 识别的原文名，与用户标题不同时显示，便于发现错误 */}
-              {titleMismatch && (
+              {/* AI 识别的原文名（始终展示，跨语言属正常，不作为警告依据） */}
+              {w.title && (
                 <span className="text-blue-500 text-xs bg-blue-100 px-1.5 py-0.5 rounded">
                   AI 识别为：{w.title}
                 </span>
@@ -249,9 +247,10 @@ export default function Home() {
             </p>
             <p className="text-xs text-blue-400 mt-0.5">
               以上为 AI 识别到的作品信息，请确认是否正确
-              {titleMismatch && (
+              {/* ⚠️ 仅当 AI 自己标记不确定时才显示警告 */}
+              {titleUncertain && (
                 <span className="text-amber-500 ml-2 font-medium">
-                  ⚠️ 识别的原文名与您输入的标题不同，请重点核对
+                  ⚠️ AI 对该作品不确定，建议补充年份或作者信息
                 </span>
               )}
             </p>
@@ -273,7 +272,7 @@ export default function Home() {
             <textarea
               value={correction}
               onChange={(e) => setCorrection(e.target.value)}
-              placeholder="如：是1971年出版的，原文名 The Day of the Jackal / 导演是诺兰，2010年上映..."
+              placeholder="如：是1971年出版的，原文名 The Day of the Jackal / 导演是谁，2010年上映 ..."
               rows={2}
               className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
             />
@@ -283,7 +282,7 @@ export default function Home() {
                 disabled={!correction.trim() || analysisLoading}
                 className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                🔍 重新查找
+                🔄 重新查找
               </button>
               <button
                 onClick={() => {
@@ -306,7 +305,7 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            剧情分析 & 稿件生成
+            剧情分析 &amp; 稿件生成
           </h1>
           <p className="text-gray-500 mt-2 text-sm">
             输入作品信息，AI 自动分析人物关系、时间线并生成多风格稿件
@@ -421,7 +420,7 @@ export default function Home() {
                             disabled={manuscriptLoading}
                             className="w-full py-2 border-2 border-blue-500 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 disabled:opacity-50 transition-colors"
                           >
-                            🔄 换当前风格重新改写
+                            🔄 换一种风格重新改写
                           </button>
                         </>
                       )}
