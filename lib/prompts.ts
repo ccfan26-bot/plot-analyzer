@@ -51,6 +51,13 @@ ${input}
 6. titleConfirmed判断规则：
    - 成功识别到用户所指作品 → true（不论用户用何种语言输入，不论title与用户输入语言是否相同）
    - 真正找不到、找错、或存在严重歧义无法确定时 → false
+7. 知识库补全规则（重要）：
+   - 用户只输入标题时，必须调用自身知识库，将该作品的 setting/tone/themes/characters/plotPoints/timeline 等全部字段填写完整
+   - 禁止在任何字段填写"未确认"、"未知"、"N/A"等无意义占位符
+   - 若对某具体子字段（如 publishYear）确实不确定，可省略该字段，但绝不能填占位文字
+8. workInfo精确性规则：
+   - workInfo.title 必须填写完全准确的原文标题，例如"The Day of the Jackal"而非"The Days of the Jackal"
+   - 不确定原文标题拼写时，宁可省略 workInfo.title，也不能填写错误拼写
 `.trim();
 
 export const MANUSCRIPT_PROMPT = (
