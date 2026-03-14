@@ -12,10 +12,10 @@ function getMediumLabel(medium: Medium): string {
 
 function getWorkInfoSchema(medium: Medium): string {
   const schemas = {
-    book: `{"title":"确认书名","author":"作者全名","publishYear":"出版年份如2019"}`,
-    movie: `{"title":"确认片名","director":"导演姓名","releaseDate":"上映日期如2019-03","mainActors":["主演1姓名","主演2姓名"]}`,
-    game: `{"title":"确认游戏名","publisher":"开发/发行商名称","releaseDate":"发行日期如2023-06"}`,
-    play: `{"title":"确认剧名","director":"导演姓名"}`,
+    book: `{"title":"该书的原文标题（如英文原著填英文名）","author":"作者全名","publishYear":"出版年份如1971"}`,
+    movie: `{"title":"该片原文标题","director":"导演姓名","releaseDate":"上映日期如2019-03","mainActors":["主演1","主演2"]}`,
+    game: `{"title":"该游戏原文标题","publisher":"开发/发行商名称","releaseDate":"发行日期如2023-06"}`,
+    play: `{"title":"该剧原文标题","director":"导演姓名"}`,
   };
   return schemas[medium];
 }
@@ -37,9 +37,14 @@ export const ANALYZE_PROMPT = (input: string, medium: Medium) =>
 
 ${input}
 
-{"title":"标题","medium":"${medium}","genre":"类型","workInfo":${getWorkInfoSchema(medium)},"characters":[{"id":"c1","name":"姓名","role":"主角/配角/反派/其他","description":"简介50字内"}],"relationships":[{"source":"c1","target":"c2","type":"朋友/敌人/恋人/亲人/师徒/同事","description":"说明"}],"plotPoints":[{"stage":"opening","title":"开端","events":["事件"]},{"stage":"development","title":"发展","events":["事件"]},{"stage":"climax","title":"高潮","events":["事件"]},{"stage":"ending","title":"结局","events":["事件"]}],"timeline":[{"id":"e1","stage":"opening","title":"标题","description":"详情","order":1}],"themes":["主题"],"setting":"背景","tone":"基调"}
+{"title":"用户输入的中文/原文标题原样保留","medium":"${medium}","genre":"类型","workInfo":${getWorkInfoSchema(medium)},"characters":[{"id":"c1","name":"姓名","role":"主角/配角/反派/其他","description":"简介50字内"}],"relationships":[{"source":"c1","target":"c2","type":"朋友/敌人/恋人/亲人/师徒/同事","description":"说明"}],"plotPoints":[{"stage":"opening","title":"开端","events":["事件"]},{"stage":"development","title":"发展","events":["事件"]},{"stage":"climax","title":"高潮","events":["事件"]},{"stage":"ending","title":"结局","events":["事件"]}],"timeline":[{"id":"e1","stage":"opening","title":"标题","description":"详情","order":1}],"themes":["主题"],"setting":"背景","tone":"基调"}
 
-规则：relationships的source/target用characters的id；timeline按时间顺序8-12个事件覆盖4阶段；workInfo必须填写真实准确的作品元数据。
+严格规则：
+1. relationships的source/target必须使用characters中的id字段值
+2. timeline按时间顺序输出8-12个事件，覆盖全部4个阶段
+3. workInfo必须对应用户指定的这部作品本身，禁止替换为同作者/同系列的其他任何作品
+4. workInfo.title填写用户所指作品的原文名称（非用户输入的译名），publishYear/releaseDate必须与该作品一致
+5. title字段保留用户输入的原始标题不做改动
 `.trim();
 
 export const MANUSCRIPT_PROMPT = (

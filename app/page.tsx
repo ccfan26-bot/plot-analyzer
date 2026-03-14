@@ -217,28 +217,43 @@ export default function Home() {
     const w = analysis.workInfo;
     const icon = mediumIcons[analysis.medium] || "📖";
 
+    // 用户输入的标题 vs AI 识别的原文名，不同时并排显示方便核对
+    const titleMismatch =
+      w.title && w.title.toLowerCase() !== analysis.title.toLowerCase();
+
     const parts: string[] = [];
     if (w.author) parts.push(`作者：${w.author}`);
     if (w.publishYear) parts.push(`${w.publishYear} 年`);
     if (w.director) parts.push(`导演：${w.director}`);
-    if (w.releaseDate) parts.push(`${w.releaseDate}`);
+    if (w.releaseDate) parts.push(w.releaseDate);
     if (w.mainActors?.length) parts.push(`主演：${w.mainActors.join("、")}`);
     if (w.publisher) parts.push(`出品：${w.publisher}`);
 
     return (
       <div className="px-5 py-3 bg-blue-50 border-b border-blue-100">
-        {/* 作品信息行 */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-blue-900">
-              <span className="mr-1">{icon}</span>
-              <span className="font-semibold">{w.title}</span>
+            <p className="text-sm text-blue-900 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <span>{icon}</span>
+              {/* 用户输入的标题 */}
+              <span className="font-semibold">{analysis.title}</span>
+              {/* AI 识别的原文名，与用户标题不同时显示，便于发现错误 */}
+              {titleMismatch && (
+                <span className="text-blue-500 text-xs bg-blue-100 px-1.5 py-0.5 rounded">
+                  AI 识别为：{w.title}
+                </span>
+              )}
               {parts.length > 0 && (
-                <span className="text-blue-600 ml-2">{parts.join(" · ")}</span>
+                <span className="text-blue-600">{parts.join(" · ")}</span>
               )}
             </p>
-            <p className="text-xs text-blue-500 mt-0.5">
+            <p className="text-xs text-blue-400 mt-0.5">
               以上为 AI 识别到的作品信息，请确认是否正确
+              {titleMismatch && (
+                <span className="text-amber-500 ml-2 font-medium">
+                  ⚠️ 识别的原文名与您输入的标题不同，请重点核对
+                </span>
+              )}
             </p>
           </div>
           <button
@@ -249,17 +264,16 @@ export default function Home() {
           </button>
         </div>
 
-        {/* 补充信息输入区 */}
         {showCorrection && (
           <div className="mt-3 pt-3 border-t border-blue-200">
             <p className="text-xs text-blue-700 mb-2">
               请补充更多信息帮助 AI
-              找到正确作品，例如：出版年份、作者名、导演、主演、原著名等
+              找到正确作品，例如：出版年份、作者名、导演、原著名等
             </p>
             <textarea
               value={correction}
               onChange={(e) => setCorrection(e.target.value)}
-              placeholder="如：是2019年上映的，导演是诺兰 / 作者是村上春树，1987年出版 / 是FromSoftware开发的..."
+              placeholder="如：是1971年出版的，原文名 The Day of the Jackal / 导演是诺兰，2010年上映..."
               rows={2}
               className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
             />
